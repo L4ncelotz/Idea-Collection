@@ -33,7 +33,9 @@ test('idea lifecycle', async ({ page }) => {
   await page.getByText(ideaTitle).first().click()
   await expect(page.getByRole('heading', { name: 'README' })).toBeVisible()
 
-  page.getByLabel('README content').fill('# Focus\n\n## Concept\ncompare text') // via codeMirror textarea
+  // Typing into CodeMirror's contenteditable surface (no .fill() target here):
+  await page.locator('.cm-content').click()
+  await page.keyboard.insertText('# Focus\n\n## Concept\ncompare text')
   await page.getByRole('button', { name: 'Preview' }).click()
   await expect(page.getByRole('heading', { name: 'Concept' })).toBeVisible()
 

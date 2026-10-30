@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Modal } from '@/components/modal'
 
 interface ConfirmDeleteModalProps {
@@ -20,6 +20,11 @@ export function ConfirmDeleteModal({
   onConfirm,
 }: ConfirmDeleteModalProps) {
   const [typed, setTyped] = useState('')
+
+  // Fresh confirmation every time the modal reopens — never a stale prefix.
+  useEffect(() => {
+    if (!open) setTyped('')
+  }, [open])
 
   const matches = typed.trim() === ideaTitle.trim()
 
