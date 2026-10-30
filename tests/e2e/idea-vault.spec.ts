@@ -36,7 +36,7 @@ test('idea lifecycle', async ({ page }) => {
   // Typing into CodeMirror's contenteditable surface (no .fill() target here):
   await page.locator('.cm-content').click()
   await page.keyboard.insertText('# Focus\n\n## Concept\ncompare text')
-  await page.getByRole('button', { name: 'Preview' }).click()
+  await page.getByRole('tab', { name: 'Preview' }).click()
   await expect(page.getByRole('heading', { name: 'Concept' })).toBeVisible()
 
   // ---- Change status to Building and save ----

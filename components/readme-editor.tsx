@@ -6,13 +6,12 @@ import { markdown } from '@codemirror/lang-markdown'
 import { Eye, PencilLine } from 'lucide-react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 // CodeMirror touches window APIs — keep it client-only.
 const CodeMirror = dynamic(() => import('@uiw/react-codemirror'), {
   ssr: false,
-  loading: () => (
-    <div className="h-[55vh] animate-pulse rounded-b-2xl bg-neutral-100" aria-hidden="true" />
-  ),
+  loading: () => <div className="h-[55vh] animate-pulse bg-muted" aria-hidden="true" />,
 })
 
 type Tab = 'edit' | 'preview'
@@ -30,61 +29,45 @@ export function ReadmeEditor({ value, onChange }: ReadmeEditorProps) {
   const [tab, setTab] = useState<Tab>('edit')
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-      {/* Tab strip */}
-      <div className="flex items-center gap-1 border-b border-neutral-200 bg-neutral-50 px-3 py-2">
-        <TabButton active={tab === 'edit'} onClick={() => setTab('edit')} icon={<PencilLine size={14} />}>
-          Edit
-        </TabButton>
-        <TabButton active={tab === 'preview'} onClick={() => setTab('preview')} icon={<Eye size={14} />}>
-          Preview
-        </TabButton>
-        <span className="ml-auto text-xs text-neutral-400">README.md</span>
-      </div>
-
-      {tab === 'edit' ? (
-        <CodeMirror
-          value={value}
-          onChange={onChange}
-          extensions={[markdown()]}
-          theme="light"
-          height="55vh"
-          basicSetup={{ lineNumbers: false, foldGutter: false, highlightActiveLine: true }}
-        />
-      ) : (
-        <div className="markdown-preview h-[55vh] overflow-y-auto px-5 py-4">
-          {value.trim() ? (
-            <Markdown remarkPlugins={[remarkGfm]}>{value}</Markdown>
-          ) : (
-            <p className="italic text-neutral-400">Nothing written yet — switch to Edit to start.</p>
-          )}
+    <div className="overflow-hidden rounded-xl border bg-card">
+      <Tabs value={tab} onValueChange={(next) => setTab(next as Tab)} className="gap-0">
+        <div className="flex items-center justify-between gap-2 border-b bg-muted/40 px-2 py-1.5">
+          <TabsList variant="line">
+            <TabsTrigger value="edit" className="text-xs">
+              <PencilLine data-icon="inline-start" />
+              Edit
+            </TabsTrigger>
+            <TabsTrigger value="preview" className="text-xs">
+              <Eye data-icon="inline-start" />
+              Preview
+            </TabsTrigger>
+          </TabsList>
+          <span className="pr-1 text-xs text-muted-foreground">README.md</span>
         </div>
-      )}
-    </div>
-  )
-}
 
-function TabButton({
-  active,
-  onClick,
-  icon,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  icon: React.ReactNode
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${
-        active ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-800'
-      }`}
-    >
-      {icon}
-      {children}
-    </button>
+        <TabsContent value="edit">
+          <CodeMirror
+            value={value}
+            onChange={onChange}
+            extensions={[markdown()]}
+            theme="light"
+            height="55vh"
+            basicSetup={{ lineNumbers: false, foldGutter: false, highlightActiveLine: true }}
+          />
+        </TabsContent>
+
+        <TabsContent value="preview">
+          <div className="markdown-preview h-[55vh] overflow-y-auto px-5 py-4">
+            {value.trim() ? (
+              <Markdown remarkPlugins={[remarkGfm]}>{value}</Markdown>
+            ) : (
+              <p className="italic text-muted-foreground">
+                Nothing written yet — switch to Edit to start.
+              </p>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   )
 }

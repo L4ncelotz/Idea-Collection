@@ -1,11 +1,18 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Loader2, Save, Trash2 } from 'lucide-react'
+import { ArrowLeft, Save, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { ConfirmDeleteModal } from '@/components/confirm-delete-modal'
 import { ReadmeEditor } from '@/components/readme-editor'
-import { ToastViewport, useToasts } from '@/components/toast'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
+import { Textarea } from '@/components/ui/textarea'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { deleteIdea, updateIdea } from '@/lib/ideas'
 import { isEditableFieldsEqual } from '@/lib/search'
 import { STATUS_META } from '@/lib/status'
@@ -23,7 +30,6 @@ import type { Idea, IdeaStatus } from '@/lib/types'
  */
 export function IdeaEditor({ idea: initial }: { idea: Idea }) {
   const router = useRouter()
-  const { toasts, push } = useToasts()
 
   const [idea, setIdea] = useState<Idea>(initial)
   const [saving, setSaving] = useState(false)
@@ -61,11 +67,11 @@ export function IdeaEditor({ idea: initial }: { idea: Idea }) {
     })
     setSaving(false)
     if (error || !data) {
-      push('Save failed — check your connection and try again', 'error')
+      toast.error('Save failed — check your connection and try again')
       return
     }
     setIdea(data)
-    push('Saved')
+    toast.success('Saved')
     router.refresh() // keeps the surrounding page data honest
   }
 
@@ -75,9 +81,10 @@ export function IdeaEditor({ idea: initial }: { idea: Idea }) {
     if (error) {
       setDeleting(false)
       setConfirmOpen(false)
-      push('Delete failed — try again in a moment', 'error')
+      toast.error('Delete failed — try again in a moment')
       return
     }
+    toast.success('Idea deleted')
     router.push('/')
     router.refresh()
   }
@@ -85,42 +92,37 @@ export function IdeaEditor({ idea: initial }: { idea: Idea }) {
   return (
     <div className="pb-20">
       {/* Top bar */}
-      <div className="flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={goBack}
-          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-neutral-500 transition hover:bg-neutral-200/70 hover:text-neutral-900"
-        >
-          <ArrowLeft size={15} /> Your Ideas
-        </button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Button type="button" onClick={goBack} variant="ghost" size="sm">
+          <ArrowLeft data-icon="inline-start" />
+          Your Ideas
+        </Button>
         <div className="flex items-center gap-2">
-          <button
+          <Button
             type="button"
             onClick={() => setConfirmOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
-            <Trash2 size={15} /> Delete
-          </button>
-          <button
+            <Trash2 data-icon="inline-start" />
+            Delete
+          </Button>
+          <Button
             type="button"
             onClick={() => void save()}
             disabled={!canSave}
             title={!canSave ? 'Nothing to save (or title is invalid)' : 'Save changes'}
-            className="inline-flex items-center gap-1.5 rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {saving ? (
-              <Loader2 size={15} className="animate-spin" />
-            ) : (
-              <Save size={15} />
-            )}
+            {saving ? <Spinner data-icon="inline-start" /> : <Save data-icon="inline-start" />}
             Save
-            {dirty ? <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> : null}
-          </button>
+            {dirty ? <span className="size-1.5 rounded-full bg-amber-500" /> : null}
+          </Button>
         </div>
       </div>
 
       {/* Meta line */}
-      <div className="mt-2 flex items-center gap-2 pl-3 text-xs text-neutral-400">
+      <div className="mt-1.5 flex items-center gap-2 pl-2.5 text-xs text-muted-foreground">
         <span>Created {formatUpdatedAt(initial.created_at)}</span>
         {formatUpdatedAt(initial.created_at) !== formatUpdatedAt(idea.updated_at) ? (
           <>
@@ -131,61 +133,76 @@ export function IdeaEditor({ idea: initial }: { idea: Idea }) {
       </div>
 
       {/* Fields */}
-      <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-5">
-        <label htmlFor="detail-title" className="text-xs font-medium uppercase tracking-wide text-neutral-400">
-          Title
-        </label>
-        <input
-          id="detail-title"
-          value={idea.title}
-          onChange={(e) => patch({ title: e.target.value })}
-          placeholder="Project title"
-          className="mt-1 w-full rounded-xl border border-transparent px-2 py-1.5 text-lg font-semibold tracking-tight outline-none transition focus:border-neutral-200 focus:bg-neutral-50"
-        />
-        {!titleCheck.ok ? (
-          <p className="mt-1 text-xs text-red-600">{titleCheck.error}</p>
-        ) : null}
+      <Card className="mt-4">
+        <CardContent>
+          <FieldGroup>
+            <Field data-invalid={!titleCheck.ok ? true : undefined}>
+              <FieldLabel htmlFor="detail-title" className="text-xs text-muted-foreground uppercase">
+                Title
+              </FieldLabel>
+              <Input
+                id="detail-title"
+                value={idea.title}
+                onChange={(e) => patch({ title: e.target.value })}
+                placeholder="Project title"
+                aria-invalid={!titleCheck.ok ? true : undefined}
+                className="h-10 text-base font-semibold tracking-tight"
+              />
+              <FieldError>{titleCheck.ok ? null : titleCheck.error}</FieldError>
+            </Field>
 
-        <label htmlFor="detail-description" className="mt-4 block text-xs font-medium uppercase tracking-wide text-neutral-400">
-          Description
-        </label>
-        <textarea
-          id="detail-description"
-          value={idea.description}
-          onChange={(e) => patch({ description: e.target.value })}
-          rows={2}
-          placeholder="What is it? Why make it?"
-          className="mt-1 w-full resize-none rounded-xl border border-transparent px-2 py-1.5 text-sm outline-none transition placeholder:text-neutral-400 focus:border-neutral-200 focus:bg-neutral-50"
-        />
+            <Field>
+              <FieldLabel
+                htmlFor="detail-description"
+                className="text-xs text-muted-foreground uppercase"
+              >
+                Description
+              </FieldLabel>
+              <Textarea
+                id="detail-description"
+                value={idea.description}
+                onChange={(e) => patch({ description: e.target.value })}
+                rows={2}
+                placeholder="What is it? Why make it?"
+                className="resize-none"
+              />
+            </Field>
 
-        <span className="mt-4 block text-xs font-medium uppercase tracking-wide text-neutral-400">
-          Status
-        </span>
-        <div className="mt-1.5 inline-flex rounded-full bg-neutral-100 p-1" role="radiogroup" aria-label="Status">
-          {(Object.keys(STATUS_META) as IdeaStatus[]).map((s) => (
-            <button
-              key={s}
-              type="button"
-              role="radio"
-              aria-checked={idea.status === s}
-              onClick={() => patch({ status: s })}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
-                idea.status === s
-                  ? `${STATUS_META[s].badge} shadow-sm`
-                  : 'text-neutral-500 hover:text-neutral-800'
-              }`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      </div>
+            <Field>
+              <FieldLabel className="text-xs text-muted-foreground uppercase">Status</FieldLabel>
+              <ToggleGroup
+                type="single"
+                value={idea.status}
+                onValueChange={(next) => {
+                  if (next) patch({ status: next as IdeaStatus })
+                }}
+                variant="outline"
+                aria-label="Status"
+              >
+                {(Object.keys(STATUS_META) as IdeaStatus[]).map((status) => (
+                  <ToggleGroupItem
+                    key={status}
+                    value={status}
+                    className={
+                      idea.status === status
+                        ? `${STATUS_META[status].badge} border-transparent`
+                        : 'text-muted-foreground'
+                    }
+                  >
+                    {status}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </Field>
+          </FieldGroup>
+        </CardContent>
+      </Card>
 
       {/* README */}
       <section className="mt-4">
-        <h2 className="mb-2 text-sm font-medium text-neutral-700">README</h2>
+        <h2 className="mb-2 text-sm font-medium">README</h2>
         <ReadmeEditor value={idea.readme} onChange={(readme) => patch({ readme })} />
-        <p className="mt-1.5 text-xs text-neutral-400">
+        <p className="mt-1.5 text-xs text-muted-foreground">
           Markdown supported — write the concept, features, and what you want to build next.
         </p>
       </section>
@@ -197,7 +214,6 @@ export function IdeaEditor({ idea: initial }: { idea: Idea }) {
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => void handleDelete()}
       />
-      <ToastViewport toasts={toasts} />
     </div>
   )
 

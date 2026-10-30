@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
 import { createClient } from '@/lib/supabase/client'
 
 export function LoginForm({ authError }: { authError: string | null }) {
@@ -18,7 +19,6 @@ export function LoginForm({ authError }: { authError: string | null }) {
     })
     if (error) {
       setLoading(false)
-      // Hard reload keeps the flow predictable on OAuth failures.
       window.location.assign(
         `/login?error=${encodeURIComponent(error.message.replace(/\s+/g, '_'))}`
       )
@@ -26,36 +26,34 @@ export function LoginForm({ authError }: { authError: string | null }) {
   }
 
   return (
-    <div className="mt-6">
-      <button
+    <div className="flex flex-col gap-3">
+      <Button
         type="button"
         onClick={signIn}
         disabled={loading}
-        className="flex w-full items-center justify-center gap-3 rounded-full border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50 disabled:opacity-60"
+        variant="outline"
+        size="lg"
+        className="w-full"
       >
-        {loading ? (
-          <Loader2 size={18} className="animate-spin text-neutral-400" />
-        ) : (
-          <GoogleMark />
-        )}
+        {loading ? <Spinner data-icon="inline-start" /> : <GoogleMark data-icon="inline-start" />}
         {loading ? 'Opening Google…' : 'Sign in with Google'}
-      </button>
+      </Button>
 
       {authError ? (
-        <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-center text-xs text-red-600">
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-center text-xs text-destructive">
           Sign-in failed: {authError}
         </p>
       ) : null}
-      <p className="mt-4 text-center text-xs text-neutral-400">
+      <p className="text-center text-xs text-muted-foreground">
         One account, one vault — your ideas stay yours.
       </p>
     </div>
   )
 }
 
-function GoogleMark() {
+function GoogleMark(props: React.ComponentProps<'svg'>) {
   return (
-    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" {...props}>
       <path
         fill="#EA4335"
         d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"

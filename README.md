@@ -10,7 +10,7 @@ Product spec: [`README (1).md`](./README%20(1).md) · Design doc: [`docs/superpo
 
 - **Next.js 16** (App Router, Server Components, Turbopack)
 - **Supabase** — Postgres + Row Level Security + Google OAuth
-- **Tailwind CSS v4**, CodeMirror (Markdown editor), react-markdown
+- **Tailwind CSS v4** + **shadcn/ui** (Radix, Nova preset), CodeMirror (Markdown editor), react-markdown
 - **Vitest** (unit) + **Playwright** (E2E)
 - Deploy: **Vercel** + Supabase free tier
 
@@ -44,7 +44,7 @@ npm run dev          # http://localhost:3000 → sign in with Google
 
 ```
 app/                  Idea List · Login · Idea Detail/Edit · OAuth callback
-components/           Cards, modals, Markdown editor, toast
+components/           Cards, dialogs, Markdown editor (shadcn/ui primitives)
 lib/                  Types, search, validation, time, Supabase clients, data access
 proxy.ts              Next.js 16 proxy — session refresh + auth gate
 supabase/schema.sql   ideas table + RLS policy + index

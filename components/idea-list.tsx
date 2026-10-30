@@ -1,9 +1,19 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Plus, SearchX, Sparkles } from 'lucide-react'
+import { Plus, Search, SearchX, Sparkles } from 'lucide-react'
 import { IdeaCard } from '@/components/idea-card'
 import { NewIdeaModal } from '@/components/new-idea-modal'
+import { Button } from '@/components/ui/button'
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
+import { Input } from '@/components/ui/input'
 import { filterIdeas } from '@/lib/search'
 import type { Idea } from '@/lib/types'
 
@@ -29,25 +39,23 @@ export function IdeaList({ initialIdeas }: { initialIdeas: Idea[] }) {
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Your Ideas</h1>
-        <button
-          type="button"
-          onClick={() => setCreating(true)}
-          className="inline-flex items-center gap-1.5 rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700"
-        >
-          <Plus size={16} /> New Idea
-        </button>
+        <Button type="button" onClick={() => setCreating(true)}>
+          <Plus data-icon="inline-start" />
+          New Idea
+        </Button>
       </div>
 
       {/* Search */}
       {hasIdeas ? (
         <div className="relative mt-4">
-          <input
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by title or description…"
-            className="w-full rounded-full border border-neutral-200 bg-white px-4 py-2.5 text-sm outline-none transition placeholder:text-neutral-400 focus:border-neutral-300 focus:ring-2 focus:ring-neutral-200"
             aria-label="Search ideas"
+            className="h-9 rounded-full pl-9"
           />
         </div>
       ) : null}
@@ -56,12 +64,15 @@ export function IdeaList({ initialIdeas }: { initialIdeas: Idea[] }) {
       {!hasIdeas ? (
         <EmptyVault onNew={() => setCreating(true)} />
       ) : filtered.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center text-center">
-          <SearchX className="text-neutral-300" size={40} />
-          <p className="mt-3 text-sm text-neutral-400">
-            No ideas match “{query}”
-          </p>
-        </div>
+        <Empty className="mt-12">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <SearchX />
+            </EmptyMedia>
+            <EmptyTitle>No matches</EmptyTitle>
+            <EmptyDescription>No ideas match “{query}”</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((idea) => (
@@ -79,21 +90,22 @@ export function IdeaList({ initialIdeas }: { initialIdeas: Idea[] }) {
 
 function EmptyVault({ onNew }: { onNew: () => void }) {
   return (
-    <div className="mt-20 flex flex-col items-center text-center">
-      <div className="rounded-full bg-neutral-100 p-5">
-        <Sparkles className="text-neutral-400" size={28} />
-      </div>
-      <h2 className="mt-4 text-lg font-semibold">Your vault is empty</h2>
-      <p className="mt-1 max-w-xs text-sm text-neutral-500">
-        Got an idea you&apos;re not ready to build yet? Park it here — it won&apos;t disappear.
-      </p>
-      <button
-        type="button"
-        onClick={onNew}
-        className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700"
-      >
-        <Plus size={16} /> Add your first idea
-      </button>
-    </div>
+    <Empty className="mt-16">
+      <EmptyHeader>
+        <EmptyMedia variant="icon" className="size-12 rounded-full">
+          <Sparkles className="size-6" />
+        </EmptyMedia>
+        <EmptyTitle>Your vault is empty</EmptyTitle>
+        <EmptyDescription>
+          Got an idea you&apos;re not ready to build yet? Park it here — it won&apos;t disappear.
+        </EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <Button type="button" onClick={onNew}>
+          <Plus data-icon="inline-start" />
+          Add your first idea
+        </Button>
+      </EmptyContent>
+    </Empty>
   )
 }
