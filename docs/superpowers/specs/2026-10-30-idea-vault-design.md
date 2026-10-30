@@ -3,7 +3,7 @@
 > **Think it. Save it. Build it later.**
 > วันที่: 2026-10-30 · สถานะ: อนุมัติ design แล้ว (รอทำ implementation plan)
 
-เอกสารนี้ต่อยอดจาก product spec อาร์กิวเมนต์ต้นทาง `README (1).md` (root ของ repo) และบันทึกการตัดสินใจทางเทคนิค สถาปัตยกรรม และขอบเขต MVP ที่ตกลงกันในบทสนทนา
+เอกสารนี้ต่อยอดจาก product spec ใน `README (1).md` (root ของ repo) และบันทึกการตัดสินใจทางเทคนิค สถาปัตยกรรม และขอบเขต MVP ที่ตกลงกันในบทสนทนา
 
 ## 1. การตัดสินใจที่ตกลงกัน
 
@@ -13,7 +13,7 @@
 | Cloud Sync | ต้องออนไลน์ตลอด | ตัด local DB + conflict handling ออกทั้งก้อน |
 | Stack | Next.js + Supabase | จุดต่ำสุดของความเสี่ยง; RLS + auth สำเร็จรูป |
 | Desktop/Electron/Tauri | ไม่ทำ MVP นี้ | ชนกับ "เปิดจากมือถือ/ทุกอุปกรณ์"; ค่อย wrap ด้วย Tauri ภายหลังได้ |
-| Go / Bun / Elysia / Rust backend | ไม่ทำ | backend เล็กมาก (~150 บรรทัด logic) ไม่คุ้มต่ำ 30–40% งาน auth/deploy เอง |
+| Go / Bun / Elysia / Rust backend | ไม่ทำ | backend เล็กมาก (~150 บรรทัด logic) ไม่คุ้มกับงานเพิ่มอีก 30–40% (auth/deploy ต้องทำเอง) |
 | Pin/Favorite | ไม่ทำ MVP | YAGNI — เพิ่มทีหลังได้เร็ว |
 
 ## 2. สถาปัตยกรรม
@@ -58,14 +58,14 @@ create index ideas_user_idx on ideas (user_id, updated_at desc);
 
 - `updated_at` ตั้งค่าจาก client ทุกครั้งที่บันทึก (ไม่เขียน trigger เพื่อความเรียบง่าย)
 - Status ย้ายไปมาอิสระระหว่างสามค่า ไม่บังคับทิศทาง Idea → Building → Done
-- การค้นหา (MVP) เป็น client-side filter บน `title` + `description` — ต่อบัญชีอยู่ระดับไม่กี่สิบรายการ ยังไม่ต้องใช้ Postgres full-text search; ขึ้นเปลี่ยนเมื่อ user มีจำนวนมหาศาล
+- การค้นหา (MVP) เป็น client-side filter บน `title` + `description` — ต่อบัญชีอยู่ระดับไม่กี่สิบรายการ ยังไม่ต้องใช้ Postgres full-text search; ค่อยย้ายไปยัง Postgres full-text search เมื่อเห็นว่าข้อมูลเริ่มช้า
 
 ## 4. Authentication
 
 - Provider เดียว: **Google Sign-in** ผ่าน Supabase Auth (`signInWithOAuth`)
 - Flow: `/login` → Google popup → Supabase callback → กลับ `/`
-- ทุกหน้าที่ต้องมีบัญชี guard ด้วย session check (middleware + server session ผ่าน `@supabase/ssr` แบนดวง cookie session)
-- session หมดอายุ/ยกเลิก → แอปดองกลับลง `/login` อัตโนมัติ
+- ทุกหน้าที่ต้องมีบัญชี guard ด้วย session check (middleware + server session ด้วย cookie ผ่าน `@supabase/ssr`)
+- session หมดอายุ/ยกเลิก → แอปพาผู้ใช้กลับไปที่ `/login` อัตโนมัติ
 - ไม่มี guest mode — เพื่อไม่สร้างปัญหา "ข้อมูลหลุดอยู่แค่ในเครื่องไหน" ภายหลัง
 
 ## 5. หน้าจอและ UX (ตาม product spec)
@@ -79,9 +79,9 @@ create index ideas_user_idx on ideas (user_id, updated_at desc);
   - **New Idea modal**: กรอก Title (required) + Description แล้ว Save — ไม่บังคับ README
 - **`/ideas/[id]` (Detail/Edit)**
   - แก้ได้: Title, Description, Status
-  - README editor: สลับ **Edit / Preview** — editor เป็น CodeMirror (markdown mode), preview จาก react-markdown; ขึ้นต้นว่างได้
+  - README editor: สลับ **Edit / Preview** — editor เป็น CodeMirror (markdown mode), preview จาก react-markdown; เนื้อหาเริ่มต้นเป็นค่าว่างได้
   - ปุ่ม **Save** (บันทึกเป็นรอบ, ไม่ auto-save, อัปเดต `updated_at`) และปุ่ม **Delete** (modal ยืนยัน → hard delete)
-  - มีข้อความ "Updated <จากเมื่อไร>" เพื่อการกลับอ่าน
+  - มีข้อความ "Updated X ago" บอกอัปเดตล่าสุดเพื่อการกลับอ่าน
 
 แนวทาง UI: Modern, Minimalist, Clean — Tailwind utilities ล้วน ไม่ใช้ component framework ใหญ่
 
@@ -95,18 +95,18 @@ create index ideas_user_idx on ideas (user_id, updated_at desc);
 | Markdown preview | `react-markdown` + `remark-gfm` |
 | Markdown editor | `@uiw/react-codemirror` (CodeMirror 6, markdown mode) |
 | Icons | `lucide-react` |
-| Deploy | Vercel — Supabase บน free tier ทั้งคู่ |
+| Deploy | Vercel + Supabase ใช้ free tier ทั้งคู่ |
 
 ## 7. Error Handling
 
 - Title ว่าง → inline validation (ไม่ให้ Save)
 - ผิดพลาดเครือข่าย/DB ขณะ Save/Delete → toast บอกเหตุผล + ข้อมูลที่ค้างอยู่ในแบบฟอร์มไม่หาย (ไม่ throw เปล่า)
-- ไม่พบไอเดีย (id ไม่มีในชุดของ user) → หน้า "Not found" ตาม RLS บังคับอยู่แล้ว
-- กรณีคัดลอก/สลับหน้ามี unsaved change → เตือนก่อนออกจากหน้า (beforeunload หรือ modal ยืนยันขนาดเล็ก)
+- ไม่พบไอเดีย (id ไม่มีในชุดของ user) → หน้า Not found — RLS ทำให้ query ผู้อื่นไม่เห็นข้อมูลอยู่แล้ว
+- ปิดหน้า/เปลี่ยนหน้าทั้งที่มี unsaved change → เตือนก่อน (beforeunload หรือ modal ยืนยันขนาดเล็ก)
 
 ## 8. Testing
 
-- **Unit tests**: ฟิลเตอร์ค้นหา, การ validate ชื่อ, การตัดสิน status, รูปแบบวันที่ "Updated ago" — ขอมาจาก Vitest
+- **Unit tests**: ฟิลเตอร์ค้นหา, การ validate ชื่อ, การตัดสิน status, รูปแบบวันที่ "Updated ago" — ใช้ Vitest
 - **E2E (Playwright)** กับ Supabase project ฝั่ง test (บัญชี Google ทดสอบ): login → สร้าง → แก้ README + preview → ค้นหา → เปลี่ยน status → ลบ (กับ empty state + ค้นหาไม่พบ)
 - Seed script รายชื่อไอเดียจาก product spec (TinyDiff, Focus Garden, RepoShelf, DevPocket, Streakly, Tiny Dungeon, ValueCheck) — ใช้เฉพาะ dev/ทดสอบ ห้าม seed อัตโนมัติถึงบัญชีผู้ใช้จริง
 
@@ -122,8 +122,8 @@ create index ideas_user_idx on ideas (user_id, updated_at desc);
 
 AI สร้าง/วิเคราะห์ไอเดีย · แนบไฟล์/รูป/เอกสาร · เชื่อม GitHub · แชร์/ทีม/Collaboration · Kanban/Timeline/Deadline · หมวดหมู่/คะแนน/Analytics · Rich-text editor · Desktop app (Electron/Tauri) · Pin/Favorite · Offline mode
 
-สิ่งเหล่านี้ไม่ใช่เงื่อนไข MVP; Tauri และ Pin ถูกจัดเก็บเป็น "ลูกเสียงต่อยอดที่สร้างได้ง่ายทีหลัง"
+สิ่งเหล่านี้ไม่ใช่เงื่อนไข MVP; Tauri และ Pin ถูกบันทึกไว้เป็นฟีเจอร์ต่อยอดที่ทำได้ง่ายทีหลัง
 
-## 11. ขนาดเดิมแผนดำเนินการ
+## 11. ขั้นถัดไป: แผนการพัฒนา
 
-หลังเอกสารนี้อนุมัติ ใช้ skill `writing-plans` แยก plan ปฏิบัติ: 1) scaffold + git init · 2) Supabase project + schema + RLS · 3) auth + middleware · 4) Idea List + modal · 5) Detail/Edit + markdown · 6) ค้นหา + empty state · 7) ทดสอบ + deploy
+หลังเอกสารนี้ผ่านการตรวจ ใช้ skill `writing-plans` แยกเป็นแผนปฏิบัติ: 1) scaffold โปรเจกต์ (git init เรียบร้อยแล้ว) · 2) Supabase project + schema + RLS · 3) auth + middleware · 4) Idea List + modal · 5) Detail/Edit + markdown · 6) ค้นหา + empty state · 7) ทดสอบ + deploy
