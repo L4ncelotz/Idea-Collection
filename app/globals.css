@@ -1,26 +1,113 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* ---- App basics ------------------------------------------------------- */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ---- Markdown preview (README) ---------------------------------------- */
+/* Lightweight "prose" styling — enough for spec, no extra plugin. */
+
+.markdown-preview {
+  color: var(--color-neutral-800);
+  line-height: 1.7;
+  word-wrap: break-word;
+}
+
+.markdown-preview > h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 1.5rem 0 0.75rem;
+}
+.markdown-preview > h1:first-child {
+  margin-top: 0;
+}
+
+.markdown-preview > h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.625rem;
+}
+
+.markdown-preview > h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+}
+
+.markdown-preview > p {
+  margin: 0.625rem 0;
+}
+
+.markdown-preview > ul,
+.markdown-preview > ol {
+  margin: 0.625rem 0;
+  padding-left: 1.5rem;
+}
+.markdown-preview > ul {
+  list-style: disc;
+}
+.markdown-preview > ol {
+  list-style: decimal;
+}
+.markdown-preview > li {
+  margin: 0.2rem 0;
+}
+
+.markdown-preview > code {
+  background: var(--color-neutral-100);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 0.375rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.875em;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+.markdown-preview > pre {
+  background: var(--color-neutral-100);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+  font-size: 0.875em;
+}
+.markdown-preview > pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.markdown-preview > blockquote {
+  border-left: 3px solid var(--color-neutral-300);
+  color: var(--color-neutral-500);
+  margin: 0.75rem 0;
+  padding: 0.25rem 0 0.25rem 0.875rem;
+}
+
+.markdown-preview > a {
+  color: var(--color-sky-700);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.markdown-preview > table {
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+}
+.markdown-preview > th,
+.markdown-preview > td {
+  border: 1px solid var(--color-neutral-200);
+  padding: 0.375rem 0.625rem;
+  text-align: left;
+}
+.markdown-preview > th {
+  background: var(--color-neutral-100);
+}
+
+.markdown-preview > hr {
+  border: 0;
+  border-top: 1px solid var(--color-neutral-200);
+  margin: 1.25rem 0;
 }

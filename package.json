@@ -1,12 +1,15 @@
 {
-  "name": "idea-scaffold",
+  "name": "idea-vault",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.2",
